@@ -1299,45 +1299,60 @@ export type Database = {
       }
       inventory: {
         Row: {
+          batch_no: string | null
           category: string
           created_at: string
           expiry_date: string | null
           id: string
           last_restocked: string | null
+          location: string | null
           min_stock: number
           name: string
           org_id: string
+          preferred_supplier_id: string | null
           quantity: number
+          reorder_qty: number | null
+          sku: string | null
           supplier: string | null
           unit: string
           unit_cost: number | null
           updated_at: string
         }
         Insert: {
+          batch_no?: string | null
           category?: string
           created_at?: string
           expiry_date?: string | null
           id?: string
           last_restocked?: string | null
+          location?: string | null
           min_stock?: number
           name: string
           org_id: string
+          preferred_supplier_id?: string | null
           quantity?: number
+          reorder_qty?: number | null
+          sku?: string | null
           supplier?: string | null
           unit?: string
           unit_cost?: number | null
           updated_at?: string
         }
         Update: {
+          batch_no?: string | null
           category?: string
           created_at?: string
           expiry_date?: string | null
           id?: string
           last_restocked?: string | null
+          location?: string | null
           min_stock?: number
           name?: string
           org_id?: string
+          preferred_supplier_id?: string | null
           quantity?: number
+          reorder_qty?: number | null
+          sku?: string | null
           supplier?: string | null
           unit?: string
           unit_cost?: number | null
@@ -1351,10 +1366,18 @@ export type Database = {
             referencedRelation: "organizations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "inventory_preferred_supplier_id_fkey"
+            columns: ["preferred_supplier_id"]
+            isOneToOne: false
+            referencedRelation: "suppliers"
+            referencedColumns: ["id"]
+          },
         ]
       }
       inventory_transactions: {
         Row: {
+          appointment_id: string | null
           balance_after: number | null
           balance_before: number | null
           created_at: string
@@ -1364,14 +1387,18 @@ export type Database = {
           notes: string | null
           org_id: string
           other_org_id: string | null
+          patient_id: string | null
+          po_id: string | null
           quantity: number
           reference: string | null
           total_cost: number | null
           transaction_type: string
           transfer_id: string | null
+          treatment_id: string | null
           unit_cost: number | null
         }
         Insert: {
+          appointment_id?: string | null
           balance_after?: number | null
           balance_before?: number | null
           created_at?: string
@@ -1381,14 +1408,18 @@ export type Database = {
           notes?: string | null
           org_id: string
           other_org_id?: string | null
+          patient_id?: string | null
+          po_id?: string | null
           quantity: number
           reference?: string | null
           total_cost?: number | null
           transaction_type: string
           transfer_id?: string | null
+          treatment_id?: string | null
           unit_cost?: number | null
         }
         Update: {
+          appointment_id?: string | null
           balance_after?: number | null
           balance_before?: number | null
           created_at?: string
@@ -1398,14 +1429,24 @@ export type Database = {
           notes?: string | null
           org_id?: string
           other_org_id?: string | null
+          patient_id?: string | null
+          po_id?: string | null
           quantity?: number
           reference?: string | null
           total_cost?: number | null
           transaction_type?: string
           transfer_id?: string | null
+          treatment_id?: string | null
           unit_cost?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "inventory_transactions_appointment_id_fkey"
+            columns: ["appointment_id"]
+            isOneToOne: false
+            referencedRelation: "appointments"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "inventory_transactions_inventory_id_fkey"
             columns: ["inventory_id"]
@@ -1425,6 +1466,27 @@ export type Database = {
             columns: ["other_org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transactions_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "patients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transactions_po_id_fkey"
+            columns: ["po_id"]
+            isOneToOne: false
+            referencedRelation: "purchase_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_transactions_treatment_id_fkey"
+            columns: ["treatment_id"]
+            isOneToOne: false
+            referencedRelation: "treatments"
             referencedColumns: ["id"]
           },
         ]
@@ -3536,6 +3598,7 @@ export type Database = {
           item_name: string
           po_id: string
           quantity: number
+          received_qty: number
           total: number
           unit_cost: number
         }
@@ -3546,6 +3609,7 @@ export type Database = {
           item_name: string
           po_id: string
           quantity?: number
+          received_qty?: number
           total?: number
           unit_cost?: number
         }
@@ -3556,6 +3620,7 @@ export type Database = {
           item_name?: string
           po_id?: string
           quantity?: number
+          received_qty?: number
           total?: number
           unit_cost?: number
         }
@@ -4515,6 +4580,7 @@ export type Database = {
       suppliers: {
         Row: {
           address: string | null
+          categories: string[] | null
           contact_person: string | null
           created_at: string
           email: string | null
@@ -4522,12 +4588,16 @@ export type Database = {
           name: string
           notes: string | null
           org_id: string
+          payment_terms: string | null
           phone: string | null
+          rating: number | null
           status: string
+          tax_id: string | null
           updated_at: string
         }
         Insert: {
           address?: string | null
+          categories?: string[] | null
           contact_person?: string | null
           created_at?: string
           email?: string | null
@@ -4535,12 +4605,16 @@ export type Database = {
           name: string
           notes?: string | null
           org_id: string
+          payment_terms?: string | null
           phone?: string | null
+          rating?: number | null
           status?: string
+          tax_id?: string | null
           updated_at?: string
         }
         Update: {
           address?: string | null
+          categories?: string[] | null
           contact_person?: string | null
           created_at?: string
           email?: string | null
@@ -4548,8 +4622,11 @@ export type Database = {
           name?: string
           notes?: string | null
           org_id?: string
+          payment_terms?: string | null
           phone?: string | null
+          rating?: number | null
           status?: string
+          tax_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -5602,6 +5679,10 @@ export type Database = {
       }
       next_lab_serial: {
         Args: { _kind: string; _org_id: string; _prefix: string }
+        Returns: string
+      }
+      receive_purchase_order: {
+        Args: { p_lines: Json; p_po_id: string }
         Returns: string
       }
       record_inventory_movement: {
