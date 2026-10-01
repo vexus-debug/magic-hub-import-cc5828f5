@@ -2,7 +2,7 @@ import { PageSkeleton } from "@/components/dashboard/PageSkeleton";
 import { useState } from "react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { GitBranch, Plus, ArrowRight, MapPin, Phone, Mail, Loader2 } from "lucide-react";
+import { GitBranch, Plus, ArrowRight, MapPin, Phone, Mail, Loader2, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrg } from "@/hooks/useOrg";
@@ -27,6 +27,9 @@ export default function BranchesPage() {
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ name: "", phone: "", address: "", email: "" });
+  const [editBranch, setEditBranch] = useState<Branch | null>(null);
+  const [editForm, setEditForm] = useState({ name: "", phone: "", address: "", email: "" });
+  const [editSaving, setEditSaving] = useState(false);
 
   const orgId = currentOrg?.org_id;
   const canManage = currentOrg?.role === "owner" || (currentOrg?.role === "admin" || currentOrg?.role === "manager");
