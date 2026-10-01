@@ -169,6 +169,29 @@ export default function BranchesPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!editBranch} onOpenChange={(o) => { if (!o) setEditBranch(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit branch</DialogTitle>
+            <DialogDescription>Update this branch's details. Changes apply to the branch right away.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div><Label>Branch name *</Label><Input value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} /></div>
+            <div><Label>Address</Label><Input value={editForm.address} onChange={(e) => setEditForm({ ...editForm, address: e.target.value })} /></div>
+            <div className="grid grid-cols-2 gap-3">
+              <div><Label>Phone</Label><Input value={editForm.phone} onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })} /></div>
+              <div><Label>Email</Label><Input type="email" value={editForm.email} onChange={(e) => setEditForm({ ...editForm, email: e.target.value })} /></div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditBranch(null)}>Cancel</Button>
+            <Button onClick={updateBranch} disabled={editSaving || !editForm.name.trim()}>
+              {editSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
