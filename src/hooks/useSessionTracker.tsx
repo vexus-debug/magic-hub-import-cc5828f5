@@ -58,7 +58,11 @@ export function useSessionTracker() {
       const { device_type, os, browser } = detectDevice();
       const orgMatch = pathRef.current.match(/^\/clinic\/([^/]+)/);
       try {
+        const { data: sess } = await supabase.auth.getSession();
+        const token = sess.session?.access_token;
+        if (!token || cancelled) return;
         await supabase.functions.invoke("track-session", {
+          headers: { Authorization: `Bearer ${token}` },
           body: {
             session_key: getSessionKey(),
             device_type,
