@@ -72,6 +72,36 @@ export default function BranchesPage() {
     }
   };
 
+  const openEdit = (b: Branch) => {
+    setEditBranch(b);
+    setEditForm({ name: b.name, phone: b.phone || "", address: b.address || "", email: b.email || "" });
+  };
+
+  const updateBranch = async () => {
+    if (!editBranch || !editForm.name.trim()) return;
+    setEditSaving(true);
+    try {
+      const { error } = await supabase
+        .from("organizations")
+        .update({
+          name: editForm.name.trim(),
+          phone: editForm.phone.trim() || null,
+          address: editForm.address.trim() || null,
+          email: editForm.email.trim() || null,
+        })
+        .eq("id", editBranch.id);
+      if (error) throw error;
+      await refetchUserData();
+      qc.invalidateQueries({ queryKey: ["org-branches", orgId] });
+      toast.success("Branch updated");
+      setEditBranch(null);
+    } catch (e: any) {
+      toast.error(e?.message || "Could not update branch");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <PageHeader title="Branches" description="Create and manage your clinic branches. Each branch has its own dashboard and records.">
@@ -94,6 +124,15 @@ export default function BranchesPage() {
               <div className="flex items-center gap-2">
                 <GitBranch className="h-4 w-4 text-primary" />
                 <h3 className="truncate font-semibold">{b.name}</h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="ml-auto h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                  onClick={() => openEdit(b)}
+                  aria-label={`Edit ${b.name}`}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
               </div>
               <div className="space-y-1 text-sm text-muted-foreground">
                 {b.address && <p className="flex items-center gap-2"><MapPin className="h-3.5 w-3.5" />{b.address}</p>}
