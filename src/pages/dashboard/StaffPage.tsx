@@ -115,7 +115,7 @@ export default function StaffPage() {
                       <p className="text-xs text-muted-foreground mt-2 font-mono">{member.phone}</p>
                     </div>
                     {isAdmin && (
-                      <Button data-tour="staff-edit" variant="ghost" size="icon" className="h-7 w-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => setEditStaff(member)}>
+                      <Button data-tour="staff-edit" variant="ghost" size="icon" className="h-7 w-7 shrink-0 md:opacity-0 md:group-hover:opacity-100 transition-opacity" onClick={() => setEditStaff(member)}>
                         <Pencil className="h-3.5 w-3.5" />
                       </Button>
                     )}
