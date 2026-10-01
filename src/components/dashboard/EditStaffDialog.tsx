@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Eye, EyeOff, KeyRound } from "lucide-react";
 
-const baseRoles = ["dentist", "assistant", "hygienist", "receptionist", "accountant", "lab_technician", "lab_assistant"];
+const baseRoles = ["dentist", "assistant", "hygienist", "receptionist", "accountant", "lab_technician", "lab_assistant", "nurse", "procurement_officer"];
 
 interface EditStaffDialogProps {
   staff: StaffMember | null;
@@ -108,7 +108,7 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {roles.map((r) => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                  {roles.map((r) => <SelectItem key={r} value={r} className="capitalize">{r.replace(/_/g, " ")}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
