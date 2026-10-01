@@ -28,7 +28,6 @@ export function AddStaffDialog({ open, onOpenChange }: AddStaffDialogProps) {
   // Managers can never appoint admins; owners, admins and super admins can
   const canAppointAdmin = isSuper || myRole === "owner" || myRole === "admin";
   const canAppointManager = canAppointAdmin;
-  const canEditLogin = isSuper || ["owner", "admin", "manager"].includes(myRole || "");
   const roles = [...(canAppointAdmin ? ["admin"] : []), ...(canAppointManager ? ["manager"] : []), ...baseRoles];
   const [form, setForm] = useState({ full_name: "", role: "dentist", phone: "", email: "", specialty: "" });
   const [createAccount, setCreateAccount] = useState(false);
