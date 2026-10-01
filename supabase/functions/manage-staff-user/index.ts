@@ -58,10 +58,11 @@ serve(async (req) => {
     }
 
     const isOwnerOrSuper = isSuperAdmin || membership?.role === "owner";
+    const canAppointAdmin = isOwnerOrSuper || membership?.role === "admin";
 
     if (action === "create_user") {
-      if ((role === "admin" || role === "manager") && !isOwnerOrSuper) {
-        return new Response(JSON.stringify({ error: "Only the clinic owner or a super admin can create admins or managers" }), {
+      if ((role === "admin" || role === "manager") && !canAppointAdmin) {
+        return new Response(JSON.stringify({ error: "Managers cannot appoint admins or managers" }), {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });

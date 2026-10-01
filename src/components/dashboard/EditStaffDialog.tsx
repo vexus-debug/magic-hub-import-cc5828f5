@@ -23,8 +23,13 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
   const updateStaff = useUpdateStaff();
   const { currentOrg } = useOrg();
   const { roles: platformRoles } = useAuth();
-  const canManageAdmins = currentOrg?.role === "owner" || platformRoles.includes("super_admin");
-  const roles = canManageAdmins ? ["admin", "manager", ...baseRoles] : baseRoles;
+  const isSuper = platformRoles.includes("super_admin");
+  const myRole = currentOrg?.role;
+  // Managers can never appoint admins; owners, admins and super admins can
+  const canAppointAdmin = isSuper || myRole === "owner" || myRole === "admin";
+  const canAppointManager = canAppointAdmin;
+  const canEditLogin = isSuper || ["owner", "admin", "manager"].includes(myRole || "");
+  const roles = [...(canAppointAdmin ? ["admin"] : []), ...(canAppointManager ? ["manager"] : []), ...baseRoles];
   const [form, setForm] = useState({ full_name: "", role: "dentist", phone: "", email: "", specialty: "", status: "active" });
   const [newPassword, setNewPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -116,7 +121,7 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {roles.map((r) => <SelectItem key={r} value={r} className="capitalize">{r.replace(/_/g, " ")}</SelectItem>)}
+                  {(roles.includes(form.role) ? roles : [form.role, ...roles]).map((r) => <SelectItem key={r} value={r} className="capitalize">{r.replace(/_/g, " ")}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -132,7 +137,7 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
             </div>
             <div className="space-y-1">
               <Label className="text-xs">Email</Label>
-              <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+              <Input value={form.email} disabled={!canEditLogin} onChange={(e) => setForm({ ...form, email: e.target.value })} />
             </div>
           </div>
           <div className="space-y-1">
@@ -147,7 +152,7 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
           </div>
 
           {/* Password change section */}
-          {hasLinkedAccount && (
+          {hasLinkedAccount && canEditLogin && (
             <div className="border rounded-lg p-3 space-y-3 bg-muted/30">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
