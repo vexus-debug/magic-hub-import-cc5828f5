@@ -1,11 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { Building2, Check, ChevronsUpDown, GitBranch } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import { useOrg } from "@/hooks/useOrg";
+import { supabase } from "@/integrations/supabase/client";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
   DropdownMenuSeparator, DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+
+type FamilyOrg = { org_id: string; org_name: string; org_slug: string; parent_org_id: string | null };
 
 /** Lets users jump between the main clinic and its branches they belong to. */
 export function BranchSwitcher({ collapsed }: { collapsed?: boolean }) {
@@ -13,12 +17,34 @@ export function BranchSwitcher({ collapsed }: { collapsed?: boolean }) {
   const { currentOrg, mainOrgId } = useOrg();
   const navigate = useNavigate();
 
+  const memberFamily: FamilyOrg[] = orgMemberships
+    .filter((m) => m.org_id === mainOrgId || m.parent_org_id === mainOrgId)
+    .map((m) => ({ org_id: m.org_id, org_name: m.org_name, org_slug: m.org_slug, parent_org_id: m.parent_org_id }));
+
+  // Fallback: memberships can be incomplete (e.g. branch created before owners
+  // were auto-added), so fetch the whole clinic family directly.
+  const { data: fetchedFamily } = useQuery({
+    queryKey: ["org-family", mainOrgId],
+    enabled: !!mainOrgId && memberFamily.length < 2,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("id, name, slug, parent_org_id")
+        .or(`id.eq.${mainOrgId},parent_org_id.eq.${mainOrgId}`);
+      if (error) throw error;
+      return (data || []).map((o: any) => ({
+        org_id: o.id as string,
+        org_name: o.name as string,
+        org_slug: o.slug as string,
+        parent_org_id: (o.parent_org_id as string | null) ?? null,
+      })) as FamilyOrg[];
+    },
+  });
+
   if (!currentOrg || !mainOrgId) return null;
   if (currentOrg.role === "manager") return null;
 
-  const family = orgMemberships.filter(
-    (m) => m.org_id === mainOrgId || m.parent_org_id === mainOrgId,
-  );
+  const family = memberFamily.length >= 2 ? memberFamily : (fetchedFamily || []);
   if (family.length < 2) return null;
 
   const main = family.find((m) => m.org_id === mainOrgId);
