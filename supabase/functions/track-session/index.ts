@@ -41,8 +41,9 @@ Deno.serve(async (req) => {
 
     const { data: userData, error: userError } = await anon.auth.getUser();
     if (userError || !userData.user) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
+      // Background tracking: ignore silently instead of surfacing an error
+      return new Response(JSON.stringify({ ok: false, skipped: "unauthenticated" }), {
+        status: 200,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
