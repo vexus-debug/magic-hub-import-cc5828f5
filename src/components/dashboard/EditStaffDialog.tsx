@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import { Eye, EyeOff, KeyRound } from "lucide-react";
 
-const baseRoles = ["dentist", "assistant", "hygienist", "receptionist", "accountant", "lab_technician", "lab_assistant"];
+const baseRoles = ["dentist", "assistant", "hygienist", "receptionist", "accountant", "lab_technician", "lab_assistant", "nurse", "procurement_officer"];
 
 interface EditStaffDialogProps {
   staff: StaffMember | null;
@@ -52,34 +52,42 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
     if (!staff) return;
     setIsSaving(true);
     try {
-      await updateStaff.mutateAsync({ id: staff.id, ...form });
+      const wantsPassword = changingPassword && newPassword.trim().length > 0;
+      if (wantsPassword && newPassword.length < 6) {
+        toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
+        setIsSaving(false);
+        return;
+      }
+      const emailChanged = form.email.trim() !== (staff.email || "") && form.email.trim().length > 0;
 
-      // If password change requested and staff has a linked user account
-      if (changingPassword && newPassword.trim() && hasLinkedAccount) {
-        if (newPassword.length < 6) {
-          toast({ title: "Password too short", description: "Password must be at least 6 characters.", variant: "destructive" });
-          setIsSaving(false);
-          return;
-        }
-
+      // Update the login account first so a rejected email doesn't leave records out of sync
+      if (hasLinkedAccount && (emailChanged || wantsPassword)) {
         const res = await supabase.functions.invoke("manage-staff-user", {
           body: {
-            action: "update_password",
+            action: "update_member_details",
             org_id: currentOrg?.org_id,
             user_id: staff.user_id,
-            password: newPassword,
+            full_name: form.full_name,
+            phone: form.phone,
+            ...(emailChanged ? { email: form.email.trim() } : {}),
+            ...(wantsPassword ? { password: newPassword } : {}),
           },
         });
-
         if (res.error || res.data?.error) {
-          toast({
-            title: "Staff updated but password change failed",
-            description: res.data?.error || res.error?.message || "Could not update password.",
-            variant: "destructive",
-          });
-        } else {
-          toast({ title: "Password updated", description: `Password for ${staff.full_name} has been changed.` });
+          throw new Error(res.data?.error || res.error?.message || "Could not update login details.");
         }
+      }
+
+      await updateStaff.mutateAsync({ id: staff.id, ...form, email: form.email.trim() });
+
+      // Keep the member's access role in sync with their staff role
+      if (hasLinkedAccount && form.role !== staff.role && currentOrg?.org_id) {
+        await supabase.from("org_members").update({ role: form.role as any })
+          .eq("org_id", currentOrg.org_id).eq("user_id", staff.user_id!);
+      }
+
+      if (hasLinkedAccount && (emailChanged || wantsPassword)) {
+        toast({ title: "Login details updated", description: `${staff.full_name} can now sign in with the new ${emailChanged && wantsPassword ? "email and password" : emailChanged ? "email" : "password"}.` });
       }
 
       onOpenChange(false);
@@ -108,7 +116,7 @@ export function EditStaffDialog({ staff, open, onOpenChange }: EditStaffDialogPr
               <Select value={form.role} onValueChange={(v) => setForm({ ...form, role: v })}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {roles.map((r) => <SelectItem key={r} value={r} className="capitalize">{r}</SelectItem>)}
+                  {roles.map((r) => <SelectItem key={r} value={r} className="capitalize">{r.replace(/_/g, " ")}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
